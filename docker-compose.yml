@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  chronostore:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chronostore-engine
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - CHRONOSTORE_ENV=production
+      - CHRONOSTORE_LOG_LEVEL=INFO
+      - CHRONOSTORE_HOST=0.0.0.0
+      - CHRONOSTORE_PORT=8000
+      - CHRONOSTORE_OFFLINE_STORE_DIR=/app/data/offline
+      - CHRONOSTORE_ONLINE_STORE_DEFAULT_TTL_SECONDS=86400
+      - CHRONOSTORE_ASOF_STRICT_LEAKAGE_CHECK=true
+    volumes:
+      - chronostore_offline_data:/app/data/offline
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    resources:
+      limits:
+        cpus: "2.0"
+        memory: 2048M
+      reservations:
+        cpus: "0.5"
+        memory: 512M
+
+volumes:
+  chronostore_offline_data:
+    driver: local
+
